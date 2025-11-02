@@ -1,0 +1,27 @@
+<h1>🔍 VK Тренды — анализ контента</h1>
+<p>Поиск и анализ популярных постов в ВКонтакте по ключевому слову</p>
+
+<%= form_with url: trends_path, method: :post, local: true do |f| %>
+  <div class="form-group">
+    <%= f.label :keyword, "Ключевое слово" %>
+    <%= f.text_field :keyword, required: true, placeholder: "Например: шейный отдел позвоночника" %>
+  </div>
+
+  <div class="form-group">
+    <%= f.label :days, "Глубина анализа (дней)" %>
+    <%= f.number_field :days, value: 90, min: 7, max: 120 %>
+    <small style="color: #666;">От 7 до 120 дней</small>
+  </div>
+
+  <%= f.submit "Анализировать" %>
+<% end %>
+
+<div style="margin-top: 30px; padding: 20px; background: #e3f2fd; border-radius: 4px;">
+  <h3>📖 Как использовать</h3>
+  <ol>
+    <li>Введите ключевое слово для поиска (например, тематика вашего контента)</li>
+    <li>Выберите период анализа (по умолчанию 90 дней)</li>
+    <li>Нажмите "Анализировать" для получения статистики</li>
+  </ol>
+  <p><strong>Результаты:</strong> Топ-10 постов по вовлеченности, статистика, темы и рекомендации для вашего контента</p>
+</div>

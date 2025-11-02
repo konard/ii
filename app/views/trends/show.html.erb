@@ -1,0 +1,156 @@
+<h1>🔍 Анализ: <%= @keyword %></h1>
+<% if @expanded %>
+  <p style="color: #ff9800; font-weight: 600;">⚠️ Расширен поиск до 120 дней для получения больше данных</p>
+<% end %>
+
+<p><a href="<%= root_path %>" style="color: #4CAF50;">← Новый поиск</a></p>
+
+<h2>📊 Общая статистика</h2>
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Всего постов</div>
+    <div class="stat-value"><%= @summary[:total_posts] %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Среднее лайков</div>
+    <div class="stat-value"><%= @summary[:avg_likes] %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Среднее репостов</div>
+    <div class="stat-value"><%= @summary[:avg_reposts] %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Среднее комментариев</div>
+    <div class="stat-value"><%= @summary[:avg_comments] %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Среднее просмотров</div>
+    <div class="stat-value"><%= @summary[:avg_views] %></div>
+  </div>
+</div>
+
+<h2>🔥 Топ-10 постов по вовлеченности</h2>
+<% if @top10.empty? %>
+  <p style="color: #666;">Постов не найдено. Попробуйте другое ключевое слово или расширьте период поиска.</p>
+<% else %>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 40px;">#</th>
+        <th>Сообщество/Автор</th>
+        <th>Дата</th>
+        <th>Лайки</th>
+        <th>Репосты</th>
+        <th>Комменты</th>
+        <th>Просмотры</th>
+        <th>Вовлеченность</th>
+        <th>Ссылка</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @top10.each_with_index do |post, index| %>
+        <tr>
+          <td><%= index + 1 %></td>
+          <td><%= post[:owner_name] || post[:owner_id] %></td>
+          <td><%= post[:published_at]&.strftime("%d.%m.%Y") %></td>
+          <td><%= post[:likes] %></td>
+          <td><%= post[:reposts] %></td>
+          <td><%= post[:comments] %></td>
+          <td><%= post[:views] %></td>
+          <td><strong><%= post[:engagement] %></strong></td>
+          <td><a href="<%= post[:link] %>" target="_blank" rel="noopener" style="color: #4CAF50;">Открыть</a></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+  <h2>📈 График вовлеченности</h2>
+  <canvas id="engagementChart" style="max-height: 400px;"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    const ctx = document.getElementById('engagementChart');
+    const labels = <%= raw @top10.map { |p| (p[:owner_name] || p[:owner_id].to_s)[0,20] }.to_json %>;
+    const engagementData = <%= raw @top10.map { |p| p[:engagement] }.to_json %>;
+    const likesData = <%= raw @top10.map { |p| p[:likes] }.to_json %>;
+    const repostsData = <%= raw @top10.map { |p| p[:reposts] }.to_json %>;
+    const commentsData = <%= raw @top10.map { |p| p[:comments] }.to_json %>;
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Лайки',
+            data: likesData,
+            backgroundColor: 'rgba(76, 175, 80, 0.8)'
+          },
+          {
+            label: 'Репосты',
+            data: repostsData,
+            backgroundColor: 'rgba(33, 150, 243, 0.8)'
+          },
+          {
+            label: 'Комментарии',
+            data: commentsData,
+            backgroundColor: 'rgba(255, 152, 0, 0.8)'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          title: {
+            display: true,
+            text: 'Структура вовлеченности топ-10 постов'
+          }
+        },
+        scales: {
+          x: {
+            stacked: true,
+            ticks: {
+              maxRotation: 45,
+              minRotation: 0
+            }
+          },
+          y: {
+            stacked: true,
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  </script>
+<% end %>
+
+<h2>🧩 Обнаруженные темы</h2>
+<% if @topics.empty? %>
+  <p style="color: #666;">Популярные темы не обнаружены в топовых постах.</p>
+<% else %>
+  <p style="background: #f8f8f8; padding: 15px; border-radius: 4px; font-size: 18px;">
+    <%= @topics.join(", ") %>
+  </p>
+<% end %>
+
+<h2>💡 Рекомендации для контента</h2>
+<ul>
+  <% @tips.each do |tip| %>
+    <li><%= tip %></li>
+  <% end %>
+</ul>
+
+<div style="margin-top: 30px; padding: 20px; background: #e8f5e9; border-radius: 4px;">
+  <h3>✨ Как использовать результаты</h3>
+  <ol>
+    <li>Изучите топовые посты — посмотрите, какие форматы и темы работают лучше всего</li>
+    <li>Обратите внимание на обнаруженные темы — это то, что интересует вашу аудиторию</li>
+    <li>Примените рекомендации при создании своего контента</li>
+    <li>Отслеживайте динамику периодически, повторяя анализ</li>
+  </ol>
+</div>
